@@ -48,6 +48,7 @@ In the Mac window:
 | Esc | Back |
 | Cmd+1 / Cmd+2 / Cmd+3 | Home / Recent apps / Search |
 | Cmd+L | Toggle phone screen off/on. The screen goes dark when a session starts (pass `--screen-on` to keep it lit), and the phone is kept awake until the Mac disconnects. |
+| Cmd+R or the title-bar rotate button | Switch the phone between portrait and landscape (your rotation setting is restored on disconnect) |
 | Cmd+K | Request a keyframe |
 
 The window title and the Mac terminal show fps, bitrate, round-trip time and capture-to-receive

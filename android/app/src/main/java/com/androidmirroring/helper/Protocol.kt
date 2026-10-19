@@ -25,6 +25,7 @@ object Msg {
     const val PING = 0x16
     const val REQUEST_KEYFRAME = 0x17
     const val SWIPE = 0x18
+    const val ROTATE = 0x19
 
     const val MAX_CONTROL_PAYLOAD = 64 * 1024
 }

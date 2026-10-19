@@ -51,6 +51,7 @@ class ControlReceiver(
             }
             Msg.REQUEST_KEYFRAME -> streamer.requestKeyframe()
             Msg.SWIPE -> injector.swipe(buf.float, buf.float, buf.float, buf.float, buf.int)
+            Msg.ROTATE -> Rotation.toggle()
             else -> Ln.i("ignoring unknown message 0x${type.toString(16)}")
         }
     }

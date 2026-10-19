@@ -28,6 +28,7 @@ Every message: `type: u8` · `length: u32` · `payload[length]`. Big-endian thro
 | 0x15 | PANEL | `on: u8`; turns the physical panel on/off while mirroring continues |
 | 0x16 | PING | `mac_now_us: i64` |
 | 0x17 | REQUEST_KEYFRAME | empty |
+| 0x19 | ROTATE | empty; toggles portrait/landscape by locking rotation, restored on disconnect |
 | 0x18 | SWIPE | `from_x: f32`, `from_y: f32`, `to_x: f32`, `to_y: f32` normalized, `duration_ms: i32` |
 
 Latency: the Mac estimates `offset = phone_now - (echo + rtt/2)` from the lowest-RTT PONG, then

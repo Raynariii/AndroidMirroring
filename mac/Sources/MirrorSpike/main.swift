@@ -35,6 +35,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var deviceName = "Connecting…"
     private var needsKeyframe = false
     private var panelOn = true
+    private var connected = false
+    private var connectionState = "starting"
+    private let startedAt = Date()
     private var timer: Timer?
 
     init(config: Config) {
@@ -52,6 +55,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.contentView = view
         window.title = deviceName
         window.center()
+        addRotateButton()
         window.makeKeyAndOrderFront(nil)
         window.makeFirstResponder(view)
         NSApp.activate(ignoringOtherApps: true)
@@ -63,10 +67,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self.connection.send(.panel, [self.panelOn ? 1 : 0])
         }
         view.onKeyframeRequest = { [weak self] in self?.connection.send(.requestKeyframe) }
+        view.onRotate = { [weak self] in self?.rotate() }
 
         connection.onStatus = { [weak self] status in
+            guard let self else { return }
             print("connection: \(status)")
-            if status.hasPrefix("closed") { self?.window.title = "Disconnected" }
+            self.connectionState = status
+            if status.hasPrefix("closed") {
+                self.window.title = self.connected
+                    ? "Disconnected"
+                    : "The phone refused the connection. Check the token matches the phone app."
+                self.connected = false
+            }
         }
         connection.onMessage = { [weak self] type, payload in self?.handle(type, payload) }
         connection.start(token: config.token)
@@ -76,7 +88,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
 
+    private func addRotateButton() {
+        let button = NSButton(
+            image: NSImage(systemSymbolName: "rotate.right", accessibilityDescription: "Rotate phone")!,
+            target: self,
+            action: #selector(rotate)
+        )
+        button.isBordered = false
+        button.toolTip = "Rotate phone (⌘R)"
+        button.frame = NSRect(x: 0, y: 0, width: 28, height: 22)
+        let accessory = NSTitlebarAccessoryViewController()
+        accessory.view = NSView(frame: button.frame)
+        accessory.view.addSubview(button)
+        accessory.layoutAttribute = .trailing
+        window.addTitlebarAccessoryViewController(accessory)
+    }
+
+    @objc private func rotate() {
+        connection.send(.rotate)
+    }
+
     private func tick() {
+        if !connected {
+            // Say why instead of sitting on "Connecting…" forever.
+            if connectionState.hasPrefix("closed") { return }
+            let target = "\(config.host):\(config.port)"
+            window.title = Date().timeIntervalSince(startedAt) < 5
+                ? "Connecting to \(target)…"
+                : "Can't reach the phone at \(target) (\(connectionState)). Is the helper running, and are both on the same Wi-Fi with VPN off?"
+            return
+        }
         var w = ByteWriter()
         w.i64(nowMicros())
         connection.send(.ping, w.bytes)
@@ -90,6 +131,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         switch type {
         case .helloAck:
             deviceName = String(decoding: payload, as: UTF8.self)
+            connected = true
             print("connected to \(deviceName)")
             // Like iPhone Mirroring, the phone screen stays dark while it is mirrored.
             if !config.screenOn {

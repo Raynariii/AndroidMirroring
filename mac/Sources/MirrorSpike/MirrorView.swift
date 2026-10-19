@@ -7,6 +7,7 @@ final class MirrorView: NSView {
     var send: ((MsgType, [UInt8]) -> Void)?
     var onPanelToggle: (() -> Void)?
     var onKeyframeRequest: (() -> Void)?
+    var onRotate: (() -> Void)?
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -96,6 +97,7 @@ final class MirrorView: NSView {
             case kVK_ANSI_3: sendKey(AndroidKey.search)
             case kVK_ANSI_L: onPanelToggle?()
             case kVK_ANSI_K: onKeyframeRequest?()
+            case kVK_ANSI_R: onRotate?()
             default: super.keyDown(with: event)
             }
             return

@@ -57,39 +57,66 @@ object HelperMain {
         Ln.i("${Build.MANUFACTURER} ${Build.MODEL}, Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
         Ln.i("listening on port ${options.port}, token ${options.token}")
         ServerSocket(options.port).use { server ->
+            var current: Pair<Socket, Thread>? = null
             while (true) {
                 val socket = server.accept()
                 Ln.i("connection from ${socket.inetAddress.hostAddress}")
-                try {
-                    serve(socket, options)
+                val session = try {
+                    handshake(socket, options)
                 } catch (e: Exception) {
-                    Ln.e("session ended", e)
-                } finally {
-                    Ln.remote = null
-                    PanelPower.restore()
+                    Ln.i("rejected: $e")
+                    null
+                }
+                if (session == null) {
                     socket.close()
-                    Ln.i("disconnected")
+                    continue
+                }
+                // The newest Mac wins. A Mac that vanished without closing its connection (sleep,
+                // Wi-Fi drop) would otherwise hold the helper forever.
+                current?.let { (oldSocket, oldThread) ->
+                    Ln.i("ending the previous session for the new connection")
+                    oldSocket.close()
+                    oldThread.join(3000)
+                }
+                current = socket to thread(name = "session") {
+                    try {
+                        serve(socket, session.first, session.second, options)
+                    } catch (e: Exception) {
+                        Ln.e("session ended", e)
+                    } finally {
+                        if (Ln.remote === session.second) Ln.remote = null
+                        PanelPower.restore()
+                        Rotation.restore()
+                        socket.close()
+                        Ln.i("disconnected")
+                    }
                 }
             }
         }
     }
 
-    private fun serve(socket: Socket, options: Options) {
+    /** Checks the token; returns the session's streams, or null to reject. */
+    private fun handshake(socket: Socket, options: Options): Pair<DataInputStream, FrameWriter>? {
         socket.tcpNoDelay = true
+        // The Mac pings every second, so a silent connection is a dead one.
+        socket.soTimeout = 5000
         val input = DataInputStream(BufferedInputStream(socket.getInputStream()))
         val writer = FrameWriter(BufferedOutputStream(socket.getOutputStream(), 256 * 1024))
-
         val type = input.readUnsignedByte()
         val length = input.readInt()
         if (type != Msg.HELLO || length !in 1..256) {
             Ln.i("rejected: bad handshake")
-            return
+            return null
         }
         val token = String(ByteArray(length).also { input.readFully(it) })
         if (token != options.token) {
             Ln.i("rejected: wrong token")
-            return
+            return null
         }
+        return input to writer
+    }
+
+    private fun serve(socket: Socket, input: DataInputStream, writer: FrameWriter, options: Options) {
         writer.send(Msg.HELLO_ACK, "${Build.MANUFACTURER} ${Build.MODEL} · Android ${Build.VERSION.RELEASE}".toByteArray())
         Ln.remote = writer
 
