@@ -198,6 +198,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSToolbarDelegate {
             // Like iPhone Mirroring, the phone screen stays dark while it is mirrored.
             if !config.screenOn {
                 panelOn = false
+                print("asking the phone to turn its screen off")
                 connection.send(.panel, [0])
             }
         case .videoConfig:
