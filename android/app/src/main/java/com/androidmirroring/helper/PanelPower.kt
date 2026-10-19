@@ -58,7 +58,7 @@ object PanelPower {
     private fun tokensFrom(holder: Class<*>): List<IBinder> {
         val ids = holder.getMethod("getPhysicalDisplayIds").invoke(null) as LongArray
         val getToken = holder.getMethod("getPhysicalDisplayToken", Long::class.java)
-        return ids.mapNotNull { getToken.invoke(null, it) as IBinder? }
+        return ids.toList().mapNotNull { getToken.invoke(null, it) as IBinder? }
     }
 
     private fun displayControl(): Class<*> {
