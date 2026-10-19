@@ -8,6 +8,9 @@ on:
 jobs:
   android:
     runs-on: ubuntu-latest
+    env:
+      # The PR's own commit, not GitHub's temporary merge commit, so it matches what the PR shows.
+      BUILD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     defaults:
       run:
         working-directory: android
@@ -20,10 +23,12 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Unit tests and debug APK
         run: ./gradlew :app:testDebugUnitTest :app:assembleDebug --stacktrace
+      - name: Name the APK after its commit
+        run: cp app/build/outputs/apk/debug/app-debug.apk "../androidmirroring-${BUILD_SHA::7}.apk"
       - uses: actions/upload-artifact@v4
         with:
-          name: androidmirroring-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: androidmirroring-debug-${{ env.BUILD_SHA }}
+          path: androidmirroring-*.apk
 
   mac:
     runs-on: macos-15

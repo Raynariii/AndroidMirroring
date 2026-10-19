@@ -50,6 +50,7 @@ class MainActivity : Activity() {
         }.also { column.addView(it) }
 
         text("Android Mirroring (spike)", 22f)
+        text("Build ${packageManager.getPackageInfo(packageName, 0).versionName}", 13f)
         text("1. Enable Developer options (tap Build number 7 times in About phone), then turn on Wireless debugging.")
         button("Open Developer options") {
             startActivity(

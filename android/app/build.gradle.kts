@@ -13,11 +13,23 @@ android {
         applicationId = "com.androidmirroring"
         minSdk = 30
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.0.1-spike"
+        // CI stamps each build so installed copies can be told apart.
+        versionCode = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
+        versionName = "0.0.1-spike+" + (System.getenv("BUILD_SHA")?.take(7) ?: "local")
 
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+        }
+    }
+
+    signingConfigs {
+        // A shared, non-secret debug key so every CI or local build installs over the previous one
+        // (and keeps its Wireless debugging pairing) instead of needing an uninstall.
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
         }
     }
 
