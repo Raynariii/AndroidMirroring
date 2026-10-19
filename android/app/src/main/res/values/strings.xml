@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Android Mirroring (spike)</string>
+    <string name="spike_info">This is a feasibility build. The mirroring helper is started from a computer with adb; see docs/m0-spikes.md in the repository.</string>
+</resources>
