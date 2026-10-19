@@ -17,6 +17,7 @@ object KeepAwake {
     private val lock = Binder()
     private var held = false
     private var watchdog: Thread? = null
+    private var reapplyFailed = false
 
     fun start(injector: InputInjector) {
         try {
@@ -36,9 +37,17 @@ object KeepAwake {
                     if (!isInteractive()) {
                         Ln.i("keep-awake: phone went to sleep, waking it")
                         injector.key(KeyEvent.KEYCODE_WAKEUP, 0)
-                        // The display manager turns the panel on as it wakes; dim it again after.
                         Thread.sleep(500)
-                        if (PanelPower.wantOff) PanelPower.set(false)
+                    }
+                    // The system turns the panel back on when it wakes and on some display
+                    // changes (seen on HyperOS), so keep re-applying what the Mac asked for.
+                    if (PanelPower.wantOff) {
+                        try {
+                            PanelPower.set(false, quiet = true)
+                        } catch (e: Exception) {
+                            if (!reapplyFailed) Ln.e("panel: re-apply failed", e)
+                            reapplyFailed = true
+                        }
                     }
                     Thread.sleep(1000)
                 }

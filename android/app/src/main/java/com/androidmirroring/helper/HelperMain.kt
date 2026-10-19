@@ -54,6 +54,7 @@ object HelperMain {
         val options = Options.parse(args)
         @Suppress("DEPRECATION")
         Looper.prepareMainLooper()
+        Workarounds.apply()
         Ln.i("${Build.MANUFACTURER} ${Build.MODEL}, Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
         Ln.i("listening on port ${options.port}, token ${options.token}")
         ServerSocket(options.port).use { server ->
@@ -129,11 +130,20 @@ object HelperMain {
                 socket.close()
             }
         }
+        val audio = AudioStreamer(writer)
+        thread(name = "audio") {
+            try {
+                audio.run()
+            } catch (e: Exception) {
+                if (audio.running) Ln.e("audio unavailable, it keeps playing on the phone", e)
+            }
+        }
         val injector = InputInjector()
         KeepAwake.start(injector)
         try {
             ControlReceiver(input, writer, streamer, injector).loop()
         } finally {
+            audio.running = false
             KeepAwake.stop()
             streamer.running = false
             video.join(2000)

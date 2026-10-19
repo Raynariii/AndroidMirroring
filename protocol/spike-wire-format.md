@@ -15,6 +15,7 @@ Every message: `type: u8` · `length: u32` · `payload[length]`. Big-endian thro
 | 0x03 | VIDEO_FRAME | `capture_us: i64` (phone CLOCK_MONOTONIC), `keyframe: u8`, H.264 access unit (Annex-B) |
 | 0x04 | PONG | `echo_us: i64` (from PING), `phone_now_us: i64` (CLOCK_MONOTONIC) |
 | 0x05 | LOG | UTF-8 text |
+| 0x06 | AUDIO | Raw PCM: 48 kHz, 16-bit little-endian, stereo interleaved, about 10 ms per message. The phone's own speaker is silent while it is captured. |
 
 ## Mac → helper
 
@@ -28,8 +29,8 @@ Every message: `type: u8` · `length: u32` · `payload[length]`. Big-endian thro
 | 0x15 | PANEL | `on: u8`; turns the physical panel on/off while mirroring continues |
 | 0x16 | PING | `mac_now_us: i64` |
 | 0x17 | REQUEST_KEYFRAME | empty |
-| 0x19 | ROTATE | empty; toggles portrait/landscape by locking rotation, restored on disconnect |
 | 0x18 | SWIPE | `from_x: f32`, `from_y: f32`, `to_x: f32`, `to_y: f32` normalized, `duration_ms: i32` |
+| 0x19 | ROTATE | empty; toggles portrait/landscape by locking rotation, restored on disconnect |
 
 Latency: the Mac estimates `offset = phone_now - (echo + rtt/2)` from the lowest-RTT PONG, then
 `latency = mac_receive_time - (capture_us - offset)`. This covers capture, encode and network,

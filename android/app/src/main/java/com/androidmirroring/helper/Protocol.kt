@@ -14,6 +14,7 @@ object Msg {
     const val VIDEO_FRAME = 0x03
     const val PONG = 0x04
     const val LOG = 0x05
+    const val AUDIO = 0x06
 
     // Mac -> helper
     const val HELLO = 0x10

@@ -9,6 +9,7 @@ enum MsgType: UInt8 {
     case videoFrame = 0x03
     case pong = 0x04
     case log = 0x05
+    case audio = 0x06
 
     // Mac -> helper
     case hello = 0x10

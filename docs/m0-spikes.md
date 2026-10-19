@@ -48,10 +48,13 @@ In the Mac window:
 | Esc | Back |
 | Cmd+1 / Cmd+2 / Cmd+3 | Home / Recent apps / Search |
 | Cmd+L | Toggle phone screen off/on. The screen goes dark when a session starts (pass `--screen-on` to keep it lit), and the phone is kept awake until the Mac disconnects. |
-| Cmd+R or the title-bar rotate button | Switch the phone between portrait and landscape (your rotation setting is restored on disconnect) |
+| Toolbar | Back, Home, Recent apps, Rotate, phone screen on/off |
+| Cmd+R | Switch the phone between portrait and landscape (your rotation setting is restored on disconnect) |
 | Cmd+K | Request a keyframe |
 
-The window title and the Mac terminal show fps, bitrate, round-trip time and capture-to-receive
+Phone sound plays on the Mac while connected and goes back to the phone's speaker on disconnect.
+
+The window subtitle shows fps and round-trip time; the Mac terminal shows fps, bitrate, round-trip time and capture-to-receive
 latency (p50/p95) once per second. Phone-side log lines are prefixed `phone:`.
 
 Helper options (append to `scripts/run-helper.sh`): `max_size=1280`, `bit_rate=4000000`, `max_fps=30`.

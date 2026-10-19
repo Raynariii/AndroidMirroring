@@ -86,20 +86,30 @@ final class MirrorView: NSView {
         send?(.swipe, w.bytes)
     }
 
+    /// Cmd shortcuts arrive here, not in keyDown, so they are handled before AppKit's own
+    /// key-equivalent handling swallows them. Matched by physical key so they work whatever
+    /// keyboard language is active.
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        guard event.type == .keyDown,
+              event.modifierFlags.intersection(.deviceIndependentFlagsMask).contains(.command)
+        else { return super.performKeyEquivalent(with: event) }
+        switch Int(event.keyCode) {
+        case kVK_ANSI_1: sendKey(AndroidKey.home)
+        case kVK_ANSI_2: sendKey(AndroidKey.appSwitch)
+        case kVK_ANSI_3: sendKey(AndroidKey.search)
+        case kVK_ANSI_L: onPanelToggle?()
+        case kVK_ANSI_K: onKeyframeRequest?()
+        case kVK_ANSI_R: onRotate?()
+        default: return super.performKeyEquivalent(with: event)
+        }
+        return true
+    }
+
     override func keyDown(with event: NSEvent) {
         let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         let keyCode = Int(event.keyCode)
         if flags.contains(.command) {
-            // Matched by physical key so shortcuts work whatever keyboard language is active.
-            switch keyCode {
-            case kVK_ANSI_1: sendKey(AndroidKey.home)
-            case kVK_ANSI_2: sendKey(AndroidKey.appSwitch)
-            case kVK_ANSI_3: sendKey(AndroidKey.search)
-            case kVK_ANSI_L: onPanelToggle?()
-            case kVK_ANSI_K: onKeyframeRequest?()
-            case kVK_ANSI_R: onRotate?()
-            default: super.keyDown(with: event)
-            }
+            super.keyDown(with: event)
             return
         }
         // Arrows swipe; with Option held they are real arrow keys (moving a text cursor).
