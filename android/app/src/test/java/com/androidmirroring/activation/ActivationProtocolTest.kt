@@ -85,6 +85,6 @@ class ActivationProtocolTest {
         val command = HelperLauncher.launchCommand("/data/app/x/base.apk", "abc123")
         assertTrue(command.contains("CLASSPATH='/data/app/x/base.apk'"))
         assertTrue(command.contains("com.androidmirroring.helper.HelperMain token=abc123 port=27183"))
-        assertTrue(command.trimEnd().endsWith("&"))
+        assertTrue(command.contains("2>&1 & sleep"))
     }
 }

@@ -87,10 +87,13 @@ object HelperLauncher {
 
     /**
      * setsid detaches the helper from adbd's session so it survives the shell stream closing and
-     * Wireless debugging being turned off. Falls back to nohup where toybox lacks setsid.
+     * Wireless debugging being turned off; nohup also makes it ignore the hangup. The shell then
+     * stays alive for a moment, because adbd kills what is left of the shell's process group as
+     * soon as the shell exits, which on some phones (seen on HyperOS) is before the background job
+     * has detached.
      */
     fun launchCommand(apkPath: String, token: String): String =
-        "if command -v setsid >/dev/null; then D=setsid; else D=nohup; fi; " +
+        "if command -v setsid >/dev/null; then D='setsid nohup'; else D=nohup; fi; " +
             "CLASSPATH='$apkPath' \$D app_process / com.androidmirroring.helper.HelperMain " +
-            "token=$token port=$HELPER_PORT </dev/null >$LOG_PATH 2>&1 &"
+            "token=$token port=$HELPER_PORT </dev/null >$LOG_PATH 2>&1 & sleep 2"
 }
