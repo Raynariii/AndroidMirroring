@@ -4,6 +4,7 @@ struct Config {
     var host = ""
     var port: UInt16 = 27183
     var token = ""
+    var screenOn = false
 
     static func parse(_ args: [String]) -> Config {
         var config = Config()
@@ -13,11 +14,12 @@ struct Config {
             case "--host": config.host = it.next() ?? ""
             case "--port": config.port = UInt16(it.next() ?? "") ?? config.port
             case "--token": config.token = it.next() ?? ""
+            case "--screen-on": config.screenOn = true
             default: break
             }
         }
         if config.host.isEmpty || config.token.isEmpty {
-            FileHandle.standardError.write(Data("usage: MirrorSpike --host <phone-ip> --token <token> [--port 27183]\n".utf8))
+            FileHandle.standardError.write(Data("usage: MirrorSpike --host <phone-ip> --token <token> [--port 27183] [--screen-on]\n".utf8))
             exit(2)
         }
         return config
@@ -89,6 +91,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case .helloAck:
             deviceName = String(decoding: payload, as: UTF8.self)
             print("connected to \(deviceName)")
+            // Like iPhone Mirroring, the phone screen stays dark while it is mirrored.
+            if !config.screenOn {
+                panelOn = false
+                connection.send(.panel, [0])
+            }
         case .videoConfig:
             let width = r.u32(), height = r.u32()
             window.contentAspectRatio = NSSize(width: Int(width), height: Int(height))

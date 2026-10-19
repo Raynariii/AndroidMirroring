@@ -50,6 +50,7 @@ class ControlReceiver(
                 writer.send(Msg.PONG, ByteBuffer.allocate(16).putLong(echo).putLong(now).array())
             }
             Msg.REQUEST_KEYFRAME -> streamer.requestKeyframe()
+            Msg.SWIPE -> injector.swipe(buf.float, buf.float, buf.float, buf.float, buf.int)
             else -> Ln.i("ignoring unknown message 0x${type.toString(16)}")
         }
     }

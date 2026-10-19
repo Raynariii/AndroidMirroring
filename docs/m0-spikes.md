@@ -42,10 +42,12 @@ In the Mac window:
 |---|---|
 | Click / drag | Tap / swipe |
 | Trackpad or wheel scroll | Scroll |
-| Typing | Text (ASCII only in this spike), Return, Delete, arrows, Tab |
+| Typing | Text in whatever language the Mac keyboard is set to (non-ASCII goes through the phone clipboard, which is put back), Return, Delete, Tab |
+| Arrow keys | Swipe in that direction |
+| Option+arrow keys | Real arrow keys (move a text cursor) |
 | Esc | Back |
 | Cmd+1 / Cmd+2 / Cmd+3 | Home / Recent apps / Search |
-| Cmd+L | Toggle phone screen off/on (mirroring should continue) |
+| Cmd+L | Toggle phone screen off/on. The screen goes dark when a session starts (pass `--screen-on` to keep it lit), and the phone is kept awake until the Mac disconnects. |
 | Cmd+K | Request a keyframe |
 
 The window title and the Mac terminal show fps, bitrate, round-trip time and capture-to-receive

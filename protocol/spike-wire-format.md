@@ -24,10 +24,11 @@ Every message: `type: u8` · `length: u32` · `payload[length]`. Big-endian thro
 | 0x11 | TOUCH | `action: u8` (0 down, 1 up, 2 move), `x: f32`, `y: f32` normalized 0..1 from top-left |
 | 0x12 | SCROLL | `x: f32`, `y: f32`, `horizontal: f32`, `vertical: f32` (AXIS_HSCROLL / AXIS_VSCROLL) |
 | 0x13 | KEY | `android_keycode: i32`, `meta_state: i32`; helper sends down + up |
-| 0x14 | TEXT | UTF-8 text (spike path, ASCII only) |
+| 0x14 | TEXT | UTF-8 text. ASCII is typed with key events; anything else is pasted through the phone clipboard, which is restored afterwards. |
 | 0x15 | PANEL | `on: u8`; turns the physical panel on/off while mirroring continues |
 | 0x16 | PING | `mac_now_us: i64` |
 | 0x17 | REQUEST_KEYFRAME | empty |
+| 0x18 | SWIPE | `from_x: f32`, `from_y: f32`, `to_x: f32`, `to_y: f32` normalized, `duration_ms: i32` |
 
 Latency: the Mac estimates `offset = phone_now - (echo + rtt/2)` from the lowest-RTT PONG, then
 `latency = mac_receive_time - (capture_us - offset)`. This covers capture, encode and network,

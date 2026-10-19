@@ -102,9 +102,12 @@ object HelperMain {
                 socket.close()
             }
         }
+        val injector = InputInjector()
+        KeepAwake.start(injector)
         try {
-            ControlReceiver(input, writer, streamer, InputInjector()).loop()
+            ControlReceiver(input, writer, streamer, injector).loop()
         } finally {
+            KeepAwake.stop()
             streamer.running = false
             video.join(2000)
         }

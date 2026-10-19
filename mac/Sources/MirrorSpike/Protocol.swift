@@ -19,6 +19,7 @@ enum MsgType: UInt8 {
     case panel = 0x15
     case ping = 0x16
     case requestKeyframe = 0x17
+    case swipe = 0x18
 }
 
 struct ByteWriter {
