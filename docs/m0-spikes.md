@@ -5,15 +5,27 @@ as **works**, **works with workaround**, or **no**, with the device and Android 
 
 | # | Spike | Status |
 |---|---|---|
-| 1 | Self-ADB: app pairs with its own Wireless debugging and starts the helper; reactivation after reboot | Not started |
-| 2 | Screen capture → MediaCodec H.264 → Wi-Fi → Mac hardware decode, with latency numbers | **Code ready (this branch)** |
-| 3 | Screen off while mirroring (Android 12–16) | **Code ready (this branch)** |
-| 4 | Real-time touch, scroll and key injection | **Code ready (this branch)** |
+| 1 | Self-ADB: app pairs with its own Wireless debugging and starts the helper; reactivation after reboot | **Code ready** |
+| 2 | Screen capture → MediaCodec H.264 → Wi-Fi → Mac hardware decode, with latency numbers | **Code ready** |
+| 3 | Screen off while mirroring (Android 12–16) | **Code ready** |
+| 4 | Real-time touch, scroll and key injection | **Code ready** |
 | 5 | Mirror IME: any-language text incl. CJK composition | Not started |
 | 6 | Clipboard images from other apps readable by the helper | Not started |
 | 7 | Programmatic hotspot from the helper | Not started |
 
-Spikes 2–4 use a computer's `adb` to start the helper, so they can be tested before spike 1 exists.
+Spikes 2–4 can be started either from a computer's `adb` (below) or by the phone itself (spike 1).
+
+## Running spike 1 (no computer)
+
+1. Install the APK from CI on an Android 11+ phone and open **Android Mirroring (spike)**. Allow notifications.
+2. Enable Developer options (Settings → About phone → tap Build number 7 times). Tap **Open Developer options** and turn on **Wireless debugging** (the phone must be on Wi-Fi).
+3. Tap **Show pairing notification**. In Wireless debugging, tap **Pair device with pairing code**, pull down the notification shade, and type the 6-digit code into the notification. It should say **Paired**.
+4. Back in the app, tap **Start helper**. The screen shows the exact `MirrorSpike` command for the Mac.
+5. Restart the phone. A **Reconnect** notification should appear. Turn Wireless debugging back on (the Quick Settings tile is fastest), then tap **Start**.
+
+What to record for spike 1: does pairing succeed first time; does the helper keep running after Wireless debugging turns off; does the reboot flow work; time from tapping Start to the Mac showing the screen.
+
+The helper's own log is at `/data/local/tmp/androidmirroring-helper.log`.
 
 ## Running spikes 2–4
 
@@ -45,8 +57,8 @@ Helper options (append to `scripts/run-helper.sh`): `max_size=1280`, `bit_rate=4
 
 For each phone, fill a row (copy into `docs/compatibility.md` when results start coming in):
 
-| Phone | Android | Capture path (from log) | Encoder | Latency p50/p95 @1920/8 Mbps | Screen off works? | Touch/scroll OK? | Rotation OK? | Notes |
-|---|---|---|---|---|---|---|---|---|
+| Phone | Android | Self-start works? | Capture path (from log) | Encoder | Latency p50/p95 @1920/8 Mbps | Screen off works? | Touch/scroll OK? | Rotation OK? | Notes |
+|---|---|---|---|---|---|---|---|---|---|
 
 Priority devices: a Pixel on Android 16, a Samsung Galaxy on One UI 7/8, a Xiaomi on HyperOS
 (needs "USB debugging (Security settings)" for input injection).
