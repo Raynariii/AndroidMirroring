@@ -4,6 +4,7 @@ import android.content.Context
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.security.SecureRandom
+import javax.net.ssl.SSLException
 
 /**
  * Starts the mirroring helper (com.androidmirroring.helper.HelperMain) as the shell user through
@@ -14,6 +15,8 @@ object HelperLauncher {
     const val HELPER_PORT = 27183
     private const val LOG_PATH = "/data/local/tmp/androidmirroring-helper.log"
     private const val PREFS = "activation"
+    private const val NOT_PAIRED =
+        "Wireless debugging doesn't recognize this app yet. Pair first (step 2) and wait for the \"Paired\" notification, then tap Start helper again."
 
     sealed class Result {
         data class Started(val alreadyRunning: Boolean) : Result()
@@ -56,6 +59,14 @@ object HelperLauncher {
                     Thread.sleep(250)
                 }
                 Result.Failed("The helper did not start. Log: " + adb.shell("tail -n 20 $LOG_PATH"))
+            }
+        } catch (e: SSLException) {
+            // adbd answers an unknown client key with a certificate_unknown alert.
+            if (e.message?.contains("CERTIFICATE_UNKNOWN") == true) {
+                ActivationState.clearPaired(context)
+                Result.Failed(NOT_PAIRED)
+            } else {
+                Result.Failed(e.message ?: e.toString())
             }
         } catch (e: Exception) {
             Result.Failed(e.message ?: e.toString())

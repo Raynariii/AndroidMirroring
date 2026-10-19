@@ -85,7 +85,12 @@ class MainActivity : Activity() {
             val result = HelperLauncher.start(applicationContext, ActivationState.turnOffAfterStart(this))
             runOnUiThread {
                 startButton.isEnabled = true
-                if (result is HelperLauncher.Result.Failed) status.text = result.reason else refresh()
+                if (result is HelperLauncher.Result.Failed) {
+                    val paired = if (ActivationState.isPaired(this)) "yes" else "no"
+                    status.text = "Paired: $paired\n\n${result.reason}"
+                } else {
+                    refresh()
+                }
             }
         }
     }

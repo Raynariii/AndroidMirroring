@@ -81,6 +81,9 @@ object ActivationState {
     fun setPaired(context: Context) =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean("paired", true).apply()
 
+    fun clearPaired(context: Context) =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean("paired", false).apply()
+
     fun turnOffAfterStart(context: Context) =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean("turn_off_after_start", true)
 
