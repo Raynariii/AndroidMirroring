@@ -15,6 +15,8 @@ object HelperLauncher {
     const val HELPER_PORT = 27183
     private const val LOG_PATH = "/data/local/tmp/androidmirroring-helper.log"
     private const val PREFS = "activation"
+    // The brackets keep the pattern from matching the shell that runs this command.
+    private const val STOP_COMMAND = "pkill -f 'com[.]androidmirroring[.]helper[.]HelperMai[n]'; sleep 1"
     private const val NOT_PAIRED =
         "Wireless debugging doesn't recognize this app yet. Pair first (step 2) and wait for the \"Paired\" notification, then tap Start helper again."
 
@@ -41,14 +43,18 @@ object HelperLauncher {
 
     /** Blocking; call off the main thread. */
     fun start(context: Context, turnOffWirelessDebugging: Boolean): Result {
-        if (isHelperRunning()) return Result.Started(alreadyRunning = true)
-
         val port = AdbMdns.findLocalPort(context, AdbMdns.CONNECT)
-            ?: return Result.Failed("Wireless debugging is off. Turn it on, then try again.")
+        if (port == null) {
+            // Without Wireless debugging a running helper can't be replaced, so keep it.
+            if (isHelperRunning()) return Result.Started(alreadyRunning = true)
+            return Result.Failed("Wireless debugging is off. Turn it on, then try again.")
+        }
 
         return try {
             AdbConnection.connect("127.0.0.1", port, AdbKey.get(context)).use { adb ->
                 val apk = context.applicationInfo.sourceDir
+                // Replace any helper already running, which may be from an older version of the app.
+                adb.shell(STOP_COMMAND)
                 adb.shell(launchCommand(apk, token(context)))
                 // Give app_process a moment to bind its port before reporting.
                 repeat(20) {
