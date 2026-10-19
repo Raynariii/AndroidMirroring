@@ -68,7 +68,7 @@ class MainActivity : Activity() {
         }
         column.addView(turnOff)
         startButton = button("Start helper") { startHelper() }
-        status = text("", 15f)
+        status = text("", 15f).apply { setTextIsSelectable(true) }
 
         setContentView(ScrollView(this).apply { addView(column) })
     }

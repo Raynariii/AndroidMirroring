@@ -58,7 +58,7 @@ object HelperLauncher {
                     }
                     Thread.sleep(250)
                 }
-                Result.Failed("The helper did not start. Log: " + adb.shell("tail -n 20 $LOG_PATH"))
+                Result.Failed("The helper did not start.\n\n" + adb.shell(diagnosticCommand(apk)))
             }
         } catch (e: SSLException) {
             // adbd answers an unknown client key with a certificate_unknown alert.
@@ -72,6 +72,18 @@ object HelperLauncher {
             Result.Failed(e.message ?: e.toString())
         }
     }
+
+    /**
+     * Collects why the background launch produced nothing: the log, whether app_process is alive,
+     * a short foreground run on a spare port (its errors print straight back), and recent crash or
+     * SELinux lines from logcat.
+     */
+    fun diagnosticCommand(apkPath: String): String =
+        "echo '--- log'; ls -l $LOG_PATH; tail -n 20 $LOG_PATH; " +
+            "echo '--- processes'; ps -A -o PID,USER,NAME | grep -E 'app_process|androidmirroring'; " +
+            "echo '--- foreground run'; CLASSPATH='$apkPath' timeout 4 app_process / " +
+            "com.androidmirroring.helper.HelperMain token=probe port=${HELPER_PORT + 1} </dev/null 2>&1 | head -n 25; " +
+            "echo '--- logcat'; logcat -d -t 400 2>&1 | grep -iE 'app_process|androidmirroring|AndroidRuntime|avc: denied' | tail -n 25"
 
     /**
      * setsid detaches the helper from adbd's session so it survives the shell stream closing and
