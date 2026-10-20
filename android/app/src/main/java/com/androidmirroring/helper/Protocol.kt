@@ -14,6 +14,7 @@ object Msg {
     const val VIDEO_FRAME = 0x03
     const val PONG = 0x04
     const val LOG = 0x05
+    const val AUDIO = 0x06
 
     // Mac -> helper
     const val HELLO = 0x10
@@ -24,6 +25,8 @@ object Msg {
     const val PANEL = 0x15
     const val PING = 0x16
     const val REQUEST_KEYFRAME = 0x17
+    const val SWIPE = 0x18
+    const val ROTATE = 0x19
 
     const val MAX_CONTROL_PAYLOAD = 64 * 1024
 }

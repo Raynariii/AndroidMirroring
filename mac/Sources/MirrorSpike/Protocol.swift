@@ -9,6 +9,7 @@ enum MsgType: UInt8 {
     case videoFrame = 0x03
     case pong = 0x04
     case log = 0x05
+    case audio = 0x06
 
     // Mac -> helper
     case hello = 0x10
@@ -19,6 +20,8 @@ enum MsgType: UInt8 {
     case panel = 0x15
     case ping = 0x16
     case requestKeyframe = 0x17
+    case swipe = 0x18
+    case rotate = 0x19
 }
 
 struct ByteWriter {

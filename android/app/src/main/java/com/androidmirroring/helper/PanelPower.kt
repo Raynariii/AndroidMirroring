@@ -14,7 +14,13 @@ object PanelPower {
 
     private val surfaceControl: Class<*> by lazy { Class.forName("android.view.SurfaceControl") }
 
-    fun set(on: Boolean): Boolean {
+    /** What the Mac asked for, so [KeepAwake] can dim the panel again after waking the phone. */
+    @Volatile
+    var wantOff = false
+        private set
+
+    fun set(on: Boolean, quiet: Boolean = false): Boolean {
+        wantOff = !on
         val tokens = displayTokens()
         if (tokens.isEmpty()) {
             Ln.i("panel: no physical display token found")
@@ -22,12 +28,13 @@ object PanelPower {
         }
         val setMode = surfaceControl.getMethod("setDisplayPowerMode", IBinder::class.java, Int::class.java)
         tokens.forEach { setMode.invoke(null, it, if (on) POWER_MODE_NORMAL else POWER_MODE_OFF) }
-        Ln.i("panel: ${if (on) "on" else "off"} (${tokens.size} display(s))")
+        if (!quiet) Ln.i("panel: ${if (on) "on" else "off"} (${tokens.size} display(s))")
         return true
     }
 
     /** Best effort; used on disconnect so the phone is never left dark. */
     fun restore() {
+        wantOff = false
         try {
             set(true)
         } catch (e: Exception) {

@@ -35,6 +35,7 @@ class InputInjector {
         size = 1f
     })
     private val keyMap: KeyCharacterMap by lazy { KeyCharacterMap.load(KeyCharacterMap.VIRTUAL_KEYBOARD) }
+    private val paste by lazy { ClipboardPaste(this) }
 
     private fun inject(event: InputEvent): Boolean = injectMethod.invoke(manager, event, INJECT_MODE_ASYNC) as Boolean
 
@@ -84,20 +85,37 @@ class InputInjector {
         }
     }
 
+    /** A finger swipe between two normalized points, as a down, evenly spaced moves, and an up. */
+    fun swipe(fromX: Float, fromY: Float, toX: Float, toY: Float, durationMs: Int) {
+        val steps = SWIPE_STEPS
+        touch(MotionEvent.ACTION_DOWN, fromX, fromY)
+        for (i in 1..steps) {
+            Thread.sleep((durationMs / steps).toLong().coerceAtLeast(1))
+            val t = i.toFloat() / steps
+            touch(MotionEvent.ACTION_MOVE, fromX + (toX - fromX) * t, fromY + (toY - fromY) * t)
+        }
+        touch(MotionEvent.ACTION_UP, toX, toY)
+    }
+
     /**
-     * Spike-only text path: works for characters the virtual key map can produce (mostly ASCII).
-     * Any-language input goes through the Mirror IME in a later spike.
+     * Types [text] with key events when the virtual key map can produce it (ASCII), otherwise by
+     * pasting it, which works for any language the Mac keyboard is set to.
      */
     fun text(text: String) {
         val events = keyMap.getEvents(text.toCharArray())
-        if (events == null) {
-            Ln.i("text: cannot type \"$text\" with key events (needs the Mirror IME)")
+        if (events != null) {
+            events.forEach { inject(it) }
             return
         }
-        events.forEach { inject(it) }
+        try {
+            paste.type(text)
+        } catch (e: Exception) {
+            Ln.e("text: cannot type \"$text\"", e)
+        }
     }
 
     private companion object {
         const val INJECT_MODE_ASYNC = 0
+        const val SWIPE_STEPS = 10
     }
 }
