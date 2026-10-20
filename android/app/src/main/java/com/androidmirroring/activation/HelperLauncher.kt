@@ -1,6 +1,7 @@
 package com.androidmirroring.activation
 
 import android.content.Context
+import java.net.ConnectException
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.security.SecureRandom
@@ -17,6 +18,8 @@ object HelperLauncher {
     private const val PREFS = "activation"
     // The brackets keep the pattern from matching the shell that runs this command.
     private const val STOP_COMMAND = "pkill -f 'com[.]androidmirroring[.]helper[.]HelperMai[n]'; sleep 1"
+    private const val WIRELESS_DEBUGGING_OFF =
+        "Can't reach Wireless debugging. Make sure it's on and you're on Wi-Fi. If it is, turn it off and on again, then tap Start helper."
     private const val NOT_PAIRED =
         "Wireless debugging doesn't recognize this app yet. Pair first (step 2) and wait for the \"Paired\" notification, then tap Start helper again."
 
@@ -43,15 +46,15 @@ object HelperLauncher {
 
     /** Blocking; call off the main thread. */
     fun start(context: Context, turnOffWirelessDebugging: Boolean): Result {
-        val port = AdbMdns.findLocalPort(context, AdbMdns.CONNECT)
-        if (port == null) {
+        val ports = AdbMdns.findLocalPorts(context, AdbMdns.CONNECT)
+        if (ports.isEmpty()) {
             // Without Wireless debugging a running helper can't be replaced, so keep it.
             if (isHelperRunning()) return Result.Started(alreadyRunning = true)
-            return Result.Failed("Wireless debugging is off. Turn it on, then try again.")
+            return Result.Failed(WIRELESS_DEBUGGING_OFF)
         }
 
         return try {
-            AdbConnection.connect("127.0.0.1", port, AdbKey.get(context)).use { adb ->
+            connectAny(ports, AdbKey.get(context)).use { adb ->
                 val apk = context.applicationInfo.sourceDir
                 // Replace any helper already running, which may be from an older version of the app.
                 adb.shell(STOP_COMMAND)
@@ -74,9 +77,27 @@ object HelperLauncher {
             } else {
                 Result.Failed(e.message ?: e.toString())
             }
+        } catch (e: ConnectException) {
+            if (isHelperRunning()) Result.Started(alreadyRunning = true) else Result.Failed(WIRELESS_DEBUGGING_OFF)
         } catch (e: Exception) {
             Result.Failed(e.message ?: e.toString())
         }
+    }
+
+    /**
+     * Tries each advertised port, newest first. A refused one is left over from an earlier
+     * Wireless debugging session (it gets a new port every time it is turned on).
+     */
+    private fun connectAny(ports: List<Int>, key: AdbKey): AdbConnection {
+        var refused: ConnectException? = null
+        for (port in ports) {
+            try {
+                return AdbConnection.connect("127.0.0.1", port, key)
+            } catch (e: ConnectException) {
+                refused = e
+            }
+        }
+        throw refused!!
     }
 
     /**
